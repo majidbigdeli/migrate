@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"regexp"
 
 	"github.com/majidbigdeli/migrate/database"
 
@@ -169,6 +170,12 @@ func (ss *SQLServer) Run(migration io.Reader) error {
 
 	// run migration
 	query := string(migr[:])
+
+	match := regexp.MustCompile(`^[\t ]*GO[\t ]*\d*[\t ]*(?:--.*)?$`)
+
+	split := match.Split(query, -1)
+	fmt.Println(split)
+
 	if _, err := ss.conn.ExecContext(context.Background(), query); err != nil {
 		if msErr, ok := err.(mssql.Error); ok {
 			message := fmt.Sprintf("migration failed: %s", msErr.Message)

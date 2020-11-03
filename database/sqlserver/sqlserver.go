@@ -171,7 +171,7 @@ func (ss *SQLServer) Run(migration io.Reader) error {
 	// run migration
 	query := string(migr[:])
 
-	match := regexp.MustCompile(`^[\t ]*GO[\t ]*\d*[\t ]*(?:--.*)?$`)
+	match := regexp.MustCompile(`(?im)^[\t ]*GO[\t ]*\d*[\t ]*(?:--.*)?$`)
 
 	split := match.Split(query, -1)
 	fmt.Println(split)

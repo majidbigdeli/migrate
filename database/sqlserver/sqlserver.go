@@ -173,18 +173,21 @@ func (ss *SQLServer) Run(migration io.Reader) error {
 
 	match := regexp.MustCompile(`(?im)(^(go)[\s,;])|(^(go)$)|(;go)|(;)\s*(go)`)
 
-	split := match.Split(query, -1)
-	fmt.Println(split)
+	queries := match.Split(query, -1)
 
-	if _, err := ss.conn.ExecContext(context.Background(), query); err != nil {
-		if msErr, ok := err.(mssql.Error); ok {
-			message := fmt.Sprintf("migration failed: %s", msErr.Message)
-			if msErr.ProcName != "" {
-				message = fmt.Sprintf("%s (proc name %s)", msErr.Message, msErr.ProcName)
+	for _, newQuery := range queries {
+
+		if _, err := ss.conn.ExecContext(context.Background(), newQuery); err != nil {
+			if msErr, ok := err.(mssql.Error); ok {
+				message := fmt.Sprintf("migration failed: %s", msErr.Message)
+				if msErr.ProcName != "" {
+					message = fmt.Sprintf("%s (proc name %s)", msErr.Message, msErr.ProcName)
+				}
+				return database.Error{OrigErr: err, Err: message, Query: migr, Line: uint(msErr.LineNo)}
 			}
-			return database.Error{OrigErr: err, Err: message, Query: migr, Line: uint(msErr.LineNo)}
+			return database.Error{OrigErr: err, Err: "migration failed", Query: migr}
 		}
-		return database.Error{OrigErr: err, Err: "migration failed", Query: migr}
+
 	}
 
 	return nil
